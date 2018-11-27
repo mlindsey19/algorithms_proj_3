@@ -13,6 +13,8 @@ fun menu() = """
     7. Print Visual Tree (beta)
     8. Insert __
     Q. quit
+
+    * Must insert before transversing
 """.trimIndent()
 
 fun getNumber(): Int{
@@ -38,6 +40,7 @@ fun main(args : Array<String>) {
             '6' -> tree.delete(getNumber())
             '7' -> tree.printTree()
             '8' -> tree.insert(Node(getNumber()))
+            'q','Q' -> return
 
         }
     }while (input.toLowerCase() != 'q')

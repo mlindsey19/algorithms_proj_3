@@ -6,13 +6,11 @@ import kotlin.math.pow
 
 data class Node(var value: Int, var position: StringBuilder = StringBuilder(), var leftNode: Node? = null,
                 var rightNode: Node? = null, var parentNode: Node? = null, var depth: Int = 0)
-
+enum class Slash{ LEFT, Right }
 class BinarySearchTree {
-
     var rootNode: Node? = null
     private var height: Int = 0
-
-    private var treeMap: HashMap<Int, Int> = hashMapOf()
+    private var treeMap: HashMap<Int, Int> = hashMapOf() // maps complete tree positions with node values
 
     fun insert(newNode: Node) {
         var currentNode: Node? = null
@@ -38,7 +36,7 @@ class BinarySearchTree {
         }
 
         treeMap[decimalPos(newNode).toInt()] = newNode.value
-        height = log(treeMap.keys.max()!!.toDouble(), 2.0).toInt()
+        height = log(treeMap.keys.max()!!.toDouble() + 1, 2.0).toInt()
     }
 
     fun inOrder(node: Node){
@@ -61,11 +59,6 @@ class BinarySearchTree {
         node.leftNode?.let { return minimum( node.leftNode!! ) }
         return node
     }
-    fun maximum (node: Node): Node {
-        node.rightNode?.let { return maximum( node.rightNode!! ) }
-        return node
-    }
-
 
     private fun transplant(node: Node?, replacementNode: Node?){
         when {
@@ -131,10 +124,10 @@ class BinarySearchTree {
             print("".padEnd(pad))
             for (k in a..c) printNode(k, 2 * pad)
             println()
-           if (i <= height) {
-               print("".padEnd(pad / 2))
-               printSlash(pad, 2.pow(i))
-           }
+            if (i <= height) {
+                print("".padEnd(pad / 2))
+                printSlash(pad, 2.pow(i))
+            }
             println()
         }
     }
@@ -175,13 +168,17 @@ class BinarySearchTree {
 
     fun searchPath(num: Int) {
         var node = rootNode
+        var msg = "Number $num was not found."
         while(node != null)  {
             println(node.value)
-            if (node.value == num)
+            if (node.value == num) {
+                msg = "Found!"
                 break
+            }
             node = if (node.value > num )
                 node.leftNode else node.rightNode
         }
+        println(msg)
     }
 
     private fun newPosString(node: Node){
@@ -208,8 +205,7 @@ class BinarySearchTree {
         treeMap.clear()
         transverseNewPos(rootNode!!)
         treeMap[0] = rootNode!!.value
-        height = log(treeMap.keys.max()!!.toDouble(), 2.0).toInt()
-
+        height = log(treeMap.keys.max()!!.toDouble() + 1, 2.0).toInt()
     }
 
 }
@@ -217,7 +213,6 @@ class BinarySearchTree {
 private fun Int.pow(i: Int): Int {
     return this.toDouble().pow(i).toInt()
 }
-enum class Slash{ LEFT, Right }
 
 
 
