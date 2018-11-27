@@ -17,7 +17,6 @@ class BinarySearchTree {
         var currentNode: Node? = null
         var node: Node? = this.rootNode
 
-
         while (node != null) {
             currentNode = node
             node = if ( newNode.value < node.value) node.leftNode.also {  newNode.position.append(0) }
@@ -28,9 +27,9 @@ class BinarySearchTree {
 
         if (currentNode == null) {
             this.rootNode = newNode
+            treeMap[0] = rootNode!!.value
             return
         }
-
         if ( newNode.value < currentNode.value ) {
             currentNode.leftNode = newNode
         } else {
@@ -40,7 +39,6 @@ class BinarySearchTree {
             newNode.depth = newNode.position.toString().length
             height = newNode.depth
         }
-
         treeMap[decimalPos(newNode).toInt()] = newNode.value
     }
 
@@ -68,34 +66,36 @@ class BinarySearchTree {
         node.rightNode?.let { return maximum( node.rightNode!! ) }
         return node
     }
-    private fun successor(node: Node): Node? {
-        node.rightNode?.let { return minimum(node.rightNode!!) }
-        val parentNode = node.parentNode
-        return if (node == parentNode?.rightNode) successor(node.parentNode!!) else parentNode
+
+
+    private fun transplant(node: Node?, replacementNode: Node?){
+        when {
+            node!!.parentNode == null -> rootNode = replacementNode
+            node == node.parentNode!!.leftNode -> node.parentNode!!.leftNode = replacementNode
+            else -> node.parentNode!!.rightNode = replacementNode
+        }
+        if (replacementNode != null) replacementNode.parentNode = node.parentNode
     }
+
     fun delete (num: Int) {
-        val node: Node? = query(num)
+        val node: Node? = search(num)
         node?.let {
-            // set successor children to node children         //and set successor child to left-child of parent
-            node.rightNode?.let {
-                val successor = successor(node)
-                successor!!.rightNode = node.rightNode.also {
-                    successor.leftNode = node.leftNode.also {
-                        successor.parentNode?.leftNode = successor.leftNode
-                        if (node.value < node.parentNode!!.value) node.parentNode!!.leftNode = successor
-                        else node.parentNode!!.rightNode = successor
-                        successor.parentNode = node.parentNode
+            when{
+                node.leftNode == null -> transplant(node,node.rightNode)
+                node.rightNode == null -> transplant(node,node.leftNode)
+                else ->{
+                    val successor = minimum(node.rightNode!!)
+                    if (successor.parentNode != node){
+                        transplant( successor, successor.rightNode)
+                        successor.rightNode = node.rightNode
+                        successor.rightNode!!.parentNode = successor
                     }
+                    transplant( node, successor)
+                    successor.leftNode = node.leftNode
+                    successor.leftNode!!.parentNode = successor
                 }
-                treeMap.clear()
-                transverseNewPos(rootNode)
-                return
             }
-            //else right-child-node has null left-child link new node.right to node.parent.right
-            node.parentNode!!.rightNode = node.rightNode
-            node.rightNode!!.parentNode = node.parentNode
-            treeMap.clear()
-            transverseNewPos(rootNode)
+            newMap()
         }
     }
 
@@ -109,13 +109,13 @@ class BinarySearchTree {
     }
     private  fun toDecimal(num: String): Int {
         val length = num.length
-        var num = num.toLong() //adds setter to num
+        var number = num.toLong()
         var decimalNumber = 0
         var remainder: Long
 
         for (i in 0..length){
-            remainder = num % 10
-            num /= 10
+            remainder = number % 10
+            number /= 10
             decimalNumber += (remainder * Math.pow(2.0, i.toDouble())).toInt()
         }
         return decimalNumber
@@ -123,24 +123,19 @@ class BinarySearchTree {
 
     fun printTree() {
         var a: Int
-        var b: Int
         var c: Int
-        println(this.rootNode!!.value.toString().padStart( ( 2 * height.pow(2)  )  ) )
+        (1..(height + 1)).forEach { i ->
+            a = ((-(i * i) - (2 * i) + 3) / (i - 7))
+            c = (2.pow(i) - 2)
+            val pad = 2.pow(height - i + 2)
 
-        for ( i in 1..height ) {
-            a = (2.0).pow(i).toInt() - 1
-            b = (((3 * (2.0).pow(i) ) - 2) / 2).toInt() - 1
-            c = ((2.0).pow(i + 1) - 2).toInt()
-            val pad = 3 * ( i + 1 )
-
-            print( "".padEnd( 2*( height - i ).pow(2)  ) )
-            printSlash( pad, ( c - a + 1) )
-            print( "".padEnd( 2*( height - i ).pow(2)  ) )
-
-            for (k in a..b) printNode( k, pad )
-            print("".padEnd(2 * ( height - i ) ))
-            for (j in (b + 1)..c) printNode(j, pad)
-
+            print("".padEnd(pad))
+            for (k in a..c) printNode(k, 2 * pad)
+            println()
+           if (i <= height) {
+               print("".padEnd(pad / 2))
+               printSlash(pad, 2.pow(i))
+           }
             println()
         }
     }
@@ -150,36 +145,44 @@ class BinarySearchTree {
 
         repeat(i) {
             if (slash == Slash.LEFT) {
-                print("/".padEnd(pad))
+                print(" /".padEnd(pad - 1))
                 slash = Slash.Right
             }
             else if (slash == Slash.Right){
-                print("\\".padEnd(pad))
+                print("\\".padEnd(pad + 1))
                 slash = Slash.LEFT
             }
         }
-        println()
+
     }
 
     private fun printNode(k: Int, pad: Int){
-
-        val temp = if (k !in treeMap.keys) "__".padEnd( pad )
+        val temp = if (k !in treeMap.keys) "__".padEnd(pad)
         else treeMap.getValue(k).toString().padEnd(pad)
         print(temp)
     }
 
-    fun query( num: Int): Node? {
+    private fun search(num: Int): Node? {
         var node = rootNode
         while(node != null)  {
             if (node.value == num)
                 return node
-            if (node.value > num )
-                node = node.leftNode
-            if (node!!.value < num)
-                node = node.rightNode
+            node = if (node.value > num )
+                node.leftNode else node.rightNode
         }
 
         return node
+    }
+
+    fun searchPath(num: Int) {
+        var node = rootNode
+        while(node != null)  {
+            println(node.value)
+            if (node.value == num)
+                break
+            node = if (node.value > num )
+                node.leftNode else node.rightNode
+        }
     }
 
     private fun newPosString(node: Node){
@@ -196,15 +199,19 @@ class BinarySearchTree {
         treeMap[decimalPos(node).toInt()] = node.value
     }
 
-    private fun transverseNewPos(node: Node?){
-        newPosString(node!!)
-        node.rightNode?.let { transverseNewPos(node.rightNode) }
-        node.leftNode?.let { transverseNewPos(node.leftNode) }
+    private fun transverseNewPos(node: Node){
+        newPosString(node)
+        node.leftNode?.let { transverseNewPos(node.leftNode!!) }
+        node.rightNode?.let { transverseNewPos(node.rightNode!!) }
+    }
+
+    private fun newMap(){
+        treeMap.clear()
+        transverseNewPos(rootNode!!)
+        treeMap[0] = rootNode!!.value
     }
 
 }
-
-
 
 private fun Int.pow(i: Int): Int {
     return this.toDouble().pow(i).toInt()
