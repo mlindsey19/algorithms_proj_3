@@ -11,6 +11,7 @@ fun menu() = """
     5. Search for __
     6. Delete __
     7. Print Visual Tree (beta)
+    8. Insert __
     Q. quit
 """.trimIndent()
 
@@ -36,6 +37,7 @@ fun main(args : Array<String>) {
             '5' -> tree.searchPath(getNumber())
             '6' -> tree.delete(getNumber())
             '7' -> tree.printTree()
+            '8' -> tree.insert(Node(getNumber()))
 
         }
     }while (input.toLowerCase() != 'q')

@@ -1,6 +1,7 @@
 package algorithms.binarySearchTree
 
 import java.lang.StringBuilder
+import kotlin.math.log
 import kotlin.math.pow
 
 data class Node(var value: Int, var position: StringBuilder = StringBuilder(), var leftNode: Node? = null,
@@ -35,11 +36,9 @@ class BinarySearchTree {
         } else {
             currentNode.rightNode = newNode
         }
-        if ( newNode.position.length > newNode.depth ) {
-            newNode.depth = newNode.position.toString().length
-            height = newNode.depth
-        }
+
         treeMap[decimalPos(newNode).toInt()] = newNode.value
+        height = log(treeMap.keys.max()!!.toDouble(), 2.0).toInt()
     }
 
     fun inOrder(node: Node){
@@ -125,7 +124,7 @@ class BinarySearchTree {
         var a: Int
         var c: Int
         (1..(height + 1)).forEach { i ->
-            a = ((-(i * i) - (2 * i) + 3) / (i - 7))
+            a = ((2.pow(i) - 2) / 2)
             c = (2.pow(i) - 2)
             val pad = 2.pow(height - i + 2)
 
@@ -209,6 +208,8 @@ class BinarySearchTree {
         treeMap.clear()
         transverseNewPos(rootNode!!)
         treeMap[0] = rootNode!!.value
+        height = log(treeMap.keys.max()!!.toDouble(), 2.0).toInt()
+
     }
 
 }
